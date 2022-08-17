@@ -1,10 +1,5 @@
-local p, dap = pcall(require, 'dap')
-if not p then
-    vim.api.nvim_notify("Install 'nvim-dap' (https://github.com/mfussenegger/nvim-dap)", vim.log.levels.ERROR, {})
-    return
-end
-
 local M = {}
+local L = {}
 
 local read_file = function(file)
     local f = assert(io.open(file, 'rb'))
@@ -23,13 +18,13 @@ end
 
 local config = {}
 
-M.run = function(file)
+local run = function(file)
     local f = file or config.file
     local c = vim.json.decode(read_file(f))
     local n = collect_names(c)
     vim.ui.select(n, {}, function(_, idx)
         if idx ~= nil then
-            dap.run(c[idx])
+            L.dap.run(c[idx])
         end
     end)
 end
@@ -40,6 +35,13 @@ local default_config = {
 }
 
 M.setup = function(values)
+    local p, dap = pcall(require, 'dap')
+    if not p then
+        vim.api.nvim_notify("Install 'nvim-dap' (https://github.com/mfussenegger/nvim-dap)", vim.log.levels.ERROR, {})
+        return
+    end
+    L.dap = dap
+    M.run = run
     setmetatable(config, { __index = vim.tbl_extend('force', default_config, values) })
     if config.create_command then
         vim.api.nvim_create_user_command('DapRun', function(val)
